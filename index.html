@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15D WINGS | CRM Mission Control</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/monument-extended" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { fbblue: '#1877F2', nearblack: '#030507', module: '#0A0C10' },
+                    fontFamily: { 
+                        sync: ['Syncopate', 'sans-serif'], 
+                        monument: ['Monument Extended', 'sans-serif'], 
+                        lexend: ['Lexend', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background: #030507; color: #fff; font-family: 'Lexend', sans-serif; -webkit-font-smoothing: antialiased; }
+        .ui-sync { font-family: 'Syncopate', sans-serif; text-transform: uppercase; letter-spacing: 0.3em; font-size: 0.65rem; font-weight: 700; }
+        .title-monument { font-family: 'Monument Extended', sans-serif; text-transform: uppercase; letter-spacing: -0.02em; }
+        
+        .glass-module {
+            background: #0A0C10;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+        }
+
+        .input-terminal {
+            width: 100%; background: rgba(255,255,255,0.02); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 12px; padding: 1rem; 
+            color: white; outline: none; transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        .input-terminal:focus { border-color: #1877F2; background: rgba(24, 119, 242, 0.05); }
+
+        .btn-fire {
+            background: #1877F2; color: white; padding: 1rem 2rem;
+            border-radius: 12px; font-weight: 700; transition: all 0.3s ease;
+            text-align: center; cursor: pointer;
+        }
+        .btn-fire:hover { box-shadow: 0 0 20px rgba(24, 119, 242, 0.4); transform: translateY(-1px); }
+        .btn-fire:active { transform: translateY(0); scale: 0.98; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030507; }
+        ::-webkit-scrollbar-thumb { background: #1877F2; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+            <div>
+                <img src="https://uploads.onecompiler.io/43z22g7dk/44b5wdtpn/1000301979.png" class="h-6 mb-4 opacity-80" alt="15D Wings">
+                <h1 class="title-monument text-2xl md:text-3xl">CRM <span class="text-fbblue">Relay System</span></h1>
+                <p class="ui-sync text-[8px] text-gray-500 mt-2">V2.0.1 // Secured Comm Protocol</p>
+            </div>
+            <div class="flex gap-4">
+                <div class="glass-module px-4 py-2 flex items-center gap-3">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="ui-sync text-[8px]">Link Active</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            
+            <!-- Left: Transmission Configuration -->
+            <div class="lg:col-span-2 space-y-6">
+                <section class="glass-module p-6 md:p-8">
+                    <h2 class="ui-sync text-[10px] text-fbblue mb-8">Transmission Parameters</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="ui-sync text-[8px] text-gray-500 mb-2 block">Sender Identity (Alias)</label>
+                                <select id="sender-alias" class="input-terminal">
+                                    <option value="ops@15dwings.com.ng">ops@15dwings.com.ng (Mission Control)</option>
+                                    <option value="precious@15dwings.com.ng">precious@15dwings.com.ng (Architect)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="ui-sync text-[8px] text-gray-500 mb-2 block">Recipient Path</label>
+                                <input type="email" id="recipient-email" placeholder="client@organization.com" class="input-terminal">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="ui-sync text-[8px] text-gray-500 mb-2 block">Subject Line</label>
+                            <input type="text" id="subject-line" placeholder="[15D WINGS] FLIGHT CERTAINTY UPDATE" class="input-terminal">
+                        </div>
+
+                        <div>
+                            <label class="ui-sync text-[8px] text-gray-500 mb-2 block">Message Payload (HTML Supported)</label>
+                            <textarea id="message-body" rows="12" class="input-terminal font-mono text-sm" placeholder="Write message or select template..."></textarea>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-4 pt-4">
+                            <button onclick="fireTransmission()" id="fire-btn" class="btn-fire ui-sync flex-1">
+                                INITIATE FIRE SEQUENCE
+                            </button>
+                            <button onclick="scheduleTransmission()" class="glass-module px-6 py-4 ui-sync text-[9px] hover:bg-white/5 transition">
+                                SCHEDULE LATER
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right: Templates & History -->
+            <div class="space-y-6">
+                <section class="glass-module p-6">
+                    <h2 class="ui-sync text-[10px] text-fbblue mb-6">Payload Templates</h2>
+                    <div class="space-y-3">
+                        <button onclick="loadTemplate('welcome')" class="w-full text-left p-4 rounded-xl border border-white/5 hover:border-fbblue/50 transition bg-white/[0.01]">
+                            <div class="ui-sync text-[8px] text-white">System Welcome</div>
+                            <div class="text-[10px] text-gray-500 mt-1">Branded intro for new clients.</div>
+                        </button>
+                        <button onclick="loadTemplate('estimate')" class="w-full text-left p-4 rounded-xl border border-white/5 hover:border-fbblue/50 transition bg-white/[0.01]">
+                            <div class="ui-sync text-[8px] text-white">Flight Estimate</div>
+                            <div class="text-[10px] text-gray-500 mt-1">Operational feasibility details.</div>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="glass-module p-6">
+                    <h2 class="ui-sync text-[10px] text-gray-500 mb-6">Recent Dispatches</h2>
+                    <div id="dispatch-history" class="space-y-4 max-h-[400px] overflow-y-auto">
+                        <div class="text-[10px] text-gray-600 italic">No recent transmissions in this session.</div>
+                    </div>
+                </section>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Overlay -->
+    <div id="status-toast" class="fixed bottom-8 right-8 transform translate-y-20 opacity-0 transition-all duration-500 glass-module p-6 border-fbblue/30 max-w-sm z-[999]">
+        <div id="toast-title" class="ui-sync text-[10px] text-fbblue mb-2">System Alert</div>
+        <p id="toast-msg" class="text-xs text-gray-400"></p>
+    </div>
+
+    <script>
+        // Replace with your Web App URL after deployment
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxz4L3Xkdq4WNlsYBCvPDIj9jATCIqpCwW_whn6ofsuHaquDV_YbRCPrKU2LxmSL3g8/exec';
+
+        const templates = {
+            welcome: `<h1>TRANSMISSION SECURED</h1><p>Welcome to the 15D Wings decision layer. We are currently architecting your request for certainty.</p>`,
+            estimate: `<h2>FLIGHT ESTIMATE</h2><p>Route: [ROUTE]<br>Aircraft: [TYPE]<br>Operational Status: VERIFIED</p>`
+        };
+
+        function loadTemplate(key) {
+            document.getElementById('message-body').value = templates[key];
+            showToast('Template Loaded', 'HTML payload has been injected into the editor.');
+        }
+
+        function showToast(title, msg) {
+            const toast = document.getElementById('status-toast');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 5000);
+        }
+
+        async function fireTransmission() {
+            const btn = document.getElementById('fire-btn');
+            const data = {
+                action: 'sendNow',
+                alias: document.getElementById('sender-alias').value,
+                to: document.getElementById('recipient-email').value,
+                subject: document.getElementById('subject-line').value,
+                body: document.getElementById('message-body').value
+            };
+
+            if(!data.to || !data.subject) {
+                showToast('Validation Failed', 'Recipient path and subject are required for transmission.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'FIRING...';
+
+            try {
+                // In a real environment, you'd use google.script.run for hosted GAS
+                // or fetch for standalone web apps
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Common for GAS
+                    body: JSON.stringify(data)
+                });
+
+                showToast('Success', 'Transmission fired successfully from ' + data.alias);
+                updateHistory(data.to, data.subject);
+            } catch (e) {
+                showToast('Link Error', 'Failed to relay message. Check GAS connection.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'INITIATE FIRE SEQUENCE';
+            }
+        }
+
+        function updateHistory(to, subject) {
+            const container = document.getElementById('dispatch-history');
+            const div = document.createElement('div');
+            div.className = "p-3 bg-white/5 rounded-lg border border-white/5";
+            div.innerHTML = `
+                <div class="text-[9px] text-white truncate">${subject}</div>
+                <div class="text-[8px] text-gray-500 mt-1">${to} • Just now</div>
+            `;
+            if(container.firstChild && container.firstChild.className.includes('italic')) container.innerHTML = '';
+            container.prepend(div);
+        }
+
+        function scheduleTransmission() {
+            showToast('Scheduling Engine', 'Automation logic is currently in read-only mode.');
+        }
+    </script>
+</body>
+</html>
