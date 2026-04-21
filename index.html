@@ -56,6 +56,11 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #030507; }
         ::-webkit-scrollbar-thumb { background: #1877F2; border-radius: 10px; }
+
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -66,12 +71,12 @@
             <div>
                 <img src="https://uploads.onecompiler.io/43z22g7dk/44b5wdtpn/1000301979.png" class="h-6 mb-4 opacity-80" alt="15D Wings">
                 <h1 class="title-monument text-2xl md:text-3xl">CRM <span class="text-fbblue">Relay System</span></h1>
-                <p class="ui-sync text-[8px] text-gray-500 mt-2">V2.0.1 // Secured Comm Protocol</p>
+                <p class="ui-sync text-[8px] text-gray-500 mt-2">V2.0.2 // Scheduler Active</p>
             </div>
             <div class="flex gap-4">
                 <div class="glass-module px-4 py-2 flex items-center gap-3">
                     <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="ui-sync text-[8px]">Link Active</span>
+                    <span class="ui-sync text-[8px]">Automation Link Verified</span>
                 </div>
             </div>
         </header>
@@ -108,12 +113,25 @@
                             <textarea id="message-body" rows="12" class="input-terminal font-mono text-sm" placeholder="Write message or select template..."></textarea>
                         </div>
 
-                        <div class="flex flex-col md:flex-row gap-4 pt-4">
-                            <button onclick="fireTransmission()" id="fire-btn" class="btn-fire ui-sync flex-1">
-                                INITIATE FIRE SEQUENCE
-                            </button>
-                            <button onclick="scheduleTransmission()" class="glass-module px-6 py-4 ui-sync text-[9px] hover:bg-white/5 transition">
-                                SCHEDULE LATER
+                        <!-- Scheduler Sub-Module -->
+                        <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
+                            <h3 class="ui-sync text-[8px] text-gray-400">Scheduling Engine</h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="ui-sync text-[7px] text-gray-500 mb-2 block">Planned Execution Time</label>
+                                    <input type="datetime-local" id="schedule-time" class="input-terminal py-2">
+                                </div>
+                                <div class="flex items-end">
+                                    <button onclick="scheduleTransmission()" id="schedule-btn" class="w-full glass-module px-6 py-3 ui-sync text-[9px] hover:bg-fbblue transition-colors border-fbblue/20">
+                                        QUEUE FOR LATER
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <button onclick="fireTransmission()" id="fire-btn" class="btn-fire ui-sync w-full">
+                                INITIATE IMMEDIATE FIRE SEQUENCE
                             </button>
                         </div>
                     </div>
@@ -137,9 +155,9 @@
                 </section>
 
                 <section class="glass-module p-6">
-                    <h2 class="ui-sync text-[10px] text-gray-500 mb-6">Recent Dispatches</h2>
+                    <h2 class="ui-sync text-[10px] text-gray-500 mb-6">Activity Logs</h2>
                     <div id="dispatch-history" class="space-y-4 max-h-[400px] overflow-y-auto">
-                        <div class="text-[10px] text-gray-600 italic">No recent transmissions in this session.</div>
+                        <div class="text-[10px] text-gray-600 italic">No activity recorded in this session.</div>
                     </div>
                 </section>
             </div>
@@ -154,7 +172,7 @@
     </div>
 
     <script>
-        // Replace with your Web App URL after deployment
+        // Update this with the Deployment ID of the script containing processQueue
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbxz4L3Xkdq4WNlsYBCvPDIj9jATCIqpCwW_whn6ofsuHaquDV_YbRCPrKU2LxmSL3g8/exec';
 
         const templates = {
@@ -177,8 +195,30 @@
             }, 5000);
         }
 
-        async function fireTransmission() {
-            const btn = document.getElementById('fire-btn');
+        async function relayToGas(payload, btnId, btnText) {
+            const btn = document.getElementById(btnId);
+            btn.disabled = true;
+            btn.innerText = 'PROCESSING...';
+
+            try {
+                // Using fetch with no-cors for GAS
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
+                });
+
+                showToast('Success', payload.action === 'schedule' ? 'Transmission Queued' : 'Transmission Fired');
+                updateHistory(payload.to, payload.subject, payload.action === 'schedule' ? 'QUEUED' : 'SENT');
+            } catch (e) {
+                showToast('Link Error', 'Relay failed. Verify script deployment.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = btnText;
+            }
+        }
+
+        function fireTransmission() {
             const data = {
                 action: 'sendNow',
                 alias: document.getElementById('sender-alias').value,
@@ -188,46 +228,46 @@
             };
 
             if(!data.to || !data.subject) {
-                showToast('Validation Failed', 'Recipient path and subject are required for transmission.');
+                showToast('Validation Failed', 'Recipient and subject required.');
                 return;
             }
 
-            btn.disabled = true;
-            btn.innerText = 'FIRING...';
-
-            try {
-                // In a real environment, you'd use google.script.run for hosted GAS
-                // or fetch for standalone web apps
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Common for GAS
-                    body: JSON.stringify(data)
-                });
-
-                showToast('Success', 'Transmission fired successfully from ' + data.alias);
-                updateHistory(data.to, data.subject);
-            } catch (e) {
-                showToast('Link Error', 'Failed to relay message. Check GAS connection.');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'INITIATE FIRE SEQUENCE';
-            }
+            relayToGas(data, 'fire-btn', 'INITIATE IMMEDIATE FIRE SEQUENCE');
         }
 
-        function updateHistory(to, subject) {
+        function scheduleTransmission() {
+            const time = document.getElementById('schedule-time').value;
+            const data = {
+                action: 'schedule',
+                alias: document.getElementById('sender-alias').value,
+                to: document.getElementById('recipient-email').value,
+                subject: document.getElementById('subject-line').value,
+                body: document.getElementById('message-body').value,
+                scheduledTime: time
+            };
+
+            if(!data.to || !time) {
+                showToast('Validation Failed', 'Recipient and Time are required for scheduling.');
+                return;
+            }
+
+            relayToGas(data, 'schedule-btn', 'QUEUE FOR LATER');
+        }
+
+        function updateHistory(to, subject, status) {
             const container = document.getElementById('dispatch-history');
             const div = document.createElement('div');
             div.className = "p-3 bg-white/5 rounded-lg border border-white/5";
+            const color = status === 'QUEUED' ? 'text-yellow-500' : 'text-green-500';
             div.innerHTML = `
-                <div class="text-[9px] text-white truncate">${subject}</div>
+                <div class="flex justify-between items-start">
+                    <div class="text-[9px] text-white truncate max-w-[150px]">${subject}</div>
+                    <div class="ui-sync text-[6px] ${color}">${status}</div>
+                </div>
                 <div class="text-[8px] text-gray-500 mt-1">${to} • Just now</div>
             `;
             if(container.firstChild && container.firstChild.className.includes('italic')) container.innerHTML = '';
             container.prepend(div);
-        }
-
-        function scheduleTransmission() {
-            showToast('Scheduling Engine', 'Automation logic is currently in read-only mode.');
         }
     </script>
 </body>
