@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/monument-extended" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Rich Text Editor Library -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script>
         tailwind.config = {
@@ -44,6 +47,13 @@
         }
         .input-terminal:focus { border-color: #1877F2; background: rgba(24, 119, 242, 0.05); }
 
+        /* Quill Customization */
+        .ql-toolbar.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px 12px 0 0; background: rgba(255,255,255,0.05); }
+        .ql-container.ql-snow { border: 1px solid rgba(255,255,255,0.1); border-radius: 0 0 12px 12px; background: rgba(255,255,255,0.02); height: 300px; font-family: 'Lexend', sans-serif; color: white; }
+        .ql-snow .ql-stroke { stroke: #fff; }
+        .ql-snow .ql-fill { fill: #fff; }
+        .ql-snow .ql-picker { color: #fff; }
+
         .btn-fire {
             background: #1877F2; color: white; padding: 1rem 2rem;
             border-radius: 12px; font-weight: 700; transition: all 0.3s ease;
@@ -71,12 +81,12 @@
             <div>
                 <img src="https://uploads.onecompiler.io/43z22g7dk/44b5wdtpn/1000301979.png" class="h-6 mb-4 opacity-80" alt="15D Wings">
                 <h1 class="title-monument text-2xl md:text-3xl">CRM <span class="text-fbblue">Relay System</span></h1>
-                <p class="ui-sync text-[8px] text-gray-500 mt-2">V2.0.2 // Scheduler Active</p>
+                <p class="ui-sync text-[8px] text-gray-500 mt-2">V2.1.0 // Bulk & Rich Text Enabled</p>
             </div>
             <div class="flex gap-4">
                 <div class="glass-module px-4 py-2 flex items-center gap-3">
                     <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="ui-sync text-[8px]">Automation Link Verified</span>
+                    <span class="ui-sync text-[8px]">Link Active</span>
                 </div>
             </div>
         </header>
@@ -98,8 +108,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="ui-sync text-[8px] text-gray-500 mb-2 block">Recipient Path</label>
-                                <input type="email" id="recipient-email" placeholder="client@organization.com" class="input-terminal">
+                                <label class="ui-sync text-[8px] text-gray-500 mb-2 block">Recipient(s) (Comma separated for bulk)</label>
+                                <input type="text" id="recipient-email" placeholder="client1@org.com, client2@org.com" class="input-terminal">
                             </div>
                         </div>
 
@@ -109,8 +119,20 @@
                         </div>
 
                         <div>
-                            <label class="ui-sync text-[8px] text-gray-500 mb-2 block">Message Payload (HTML Supported)</label>
-                            <textarea id="message-body" rows="12" class="input-terminal font-mono text-sm" placeholder="Write message or select template..."></textarea>
+                            <label class="ui-sync text-[8px] text-gray-500 mb-2 block">Message Payload</label>
+                            <!-- Rich Text Editor Container -->
+                            <div id="editor-container"></div>
+                        </div>
+
+                        <!-- Attachments Sub-Module -->
+                        <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
+                             <h3 class="ui-sync text-[8px] text-gray-400">File Attachments</h3>
+                             <input type="file" id="file-input" multiple class="hidden" onchange="handleFileSelect(event)">
+                             <button onclick="document.getElementById('file-input').click()" class="text-[10px] text-fbblue flex items-center gap-2 hover:opacity-80">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                 ATTACH MISSION FILES
+                             </button>
+                             <div id="file-list" class="flex flex-wrap gap-2"></div>
                         </div>
 
                         <!-- Scheduler Sub-Module -->
@@ -145,11 +167,11 @@
                     <div class="space-y-3">
                         <button onclick="loadTemplate('welcome')" class="w-full text-left p-4 rounded-xl border border-white/5 hover:border-fbblue/50 transition bg-white/[0.01]">
                             <div class="ui-sync text-[8px] text-white">System Welcome</div>
-                            <div class="text-[10px] text-gray-500 mt-1">Branded intro for new clients.</div>
+                            <div class="text-[10px] text-gray-500 mt-1">Branded intro with formatting.</div>
                         </button>
                         <button onclick="loadTemplate('estimate')" class="w-full text-left p-4 rounded-xl border border-white/5 hover:border-fbblue/50 transition bg-white/[0.01]">
                             <div class="ui-sync text-[8px] text-white">Flight Estimate</div>
-                            <div class="text-[10px] text-gray-500 mt-1">Operational feasibility details.</div>
+                            <div class="text-[10px] text-gray-500 mt-1">Structured pricing table format.</div>
                         </button>
                     </div>
                 </section>
@@ -157,7 +179,7 @@
                 <section class="glass-module p-6">
                     <h2 class="ui-sync text-[10px] text-gray-500 mb-6">Activity Logs</h2>
                     <div id="dispatch-history" class="space-y-4 max-h-[400px] overflow-y-auto">
-                        <div class="text-[10px] text-gray-600 italic">No activity recorded in this session.</div>
+                        <div class="text-[10px] text-gray-600 italic">No activity recorded.</div>
                     </div>
                 </section>
             </div>
@@ -172,17 +194,65 @@
     </div>
 
     <script>
-        // Update this with the Deployment ID of the script containing processQueue
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxz4L3Xkdq4WNlsYBCvPDIj9jATCIqpCwW_whn6ofsuHaquDV_YbRCPrKU2LxmSL3g8/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycby_XEJ4cUB6hbIS93-AVb5uqi5cV2_fUqA2M_nQ3Shh-QbQ0mLx3Fk4iV7bC-gxNqH-/exec';
+        
+        let quill;
+        let attachedFiles = [];
+
+        // Initialize Editor
+        window.onload = () => {
+            quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'header': [1, 2, false] }],
+                        ['clean']
+                    ]
+                }
+            });
+        };
 
         const templates = {
-            welcome: `<h1>TRANSMISSION SECURED</h1><p>Welcome to the 15D Wings decision layer. We are currently architecting your request for certainty.</p>`,
-            estimate: `<h2>FLIGHT ESTIMATE</h2><p>Route: [ROUTE]<br>Aircraft: [TYPE]<br>Operational Status: VERIFIED</p>`
+            welcome: `<h1>TRANSMISSION SECURED</h1><p>Welcome to the <strong>15D Wings</strong> decision layer.</p><p>We are currently architecting your request for certainty. You will receive a follow-up shortly.</p>`,
+            estimate: `<h2>FLIGHT ESTIMATE</h2><p><strong>Route:</strong> Lagos to Abuja<br><strong>Aircraft:</strong> Gulfstream G650<br><strong>Status:</strong> <span style="color: #1877F2">VERIFIED</span></p><ul><li>Base Fare: $12,500</li><li>Landing Fees: Included</li></ul>`
         };
 
         function loadTemplate(key) {
-            document.getElementById('message-body').value = templates[key];
-            showToast('Template Loaded', 'HTML payload has been injected into the editor.');
+            quill.clipboard.dangerouslyPasteHTML(templates[key]);
+            showToast('Template Loaded', 'Formatted content injected.');
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            for(let file of files) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    attachedFiles.push({
+                        name: file.name,
+                        type: file.type,
+                        data: e.target.result.split(',')[1] // base64
+                    });
+                    renderFileList();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderFileList() {
+            const container = document.getElementById('file-list');
+            container.innerHTML = attachedFiles.map((f, i) => `
+                <div class="px-2 py-1 bg-fbblue/10 border border-fbblue/20 rounded text-[9px] flex items-center gap-2">
+                    ${f.name}
+                    <button onclick="removeFile(${i})" class="hover:text-red-500">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removeFile(index) {
+            attachedFiles.splice(index, 1);
+            renderFileList();
         }
 
         function showToast(title, msg) {
@@ -190,9 +260,7 @@
             document.getElementById('toast-title').innerText = title;
             document.getElementById('toast-msg').innerText = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 5000);
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 5000);
         }
 
         async function relayToGas(payload, btnId, btnText) {
@@ -201,17 +269,23 @@
             btn.innerText = 'PROCESSING...';
 
             try {
-                // Using fetch with no-cors for GAS
+                // IMPORTANT: Since we are sending attachments, the payload might be large.
+                // We use no-cors to avoid preflight issues with GAS.
                 await fetch(GAS_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
 
-                showToast('Success', payload.action === 'schedule' ? 'Transmission Queued' : 'Transmission Fired');
-                updateHistory(payload.to, payload.subject, payload.action === 'schedule' ? 'QUEUED' : 'SENT');
+                showToast('Success', 'Transmission Relay Completed');
+                updateHistory(payload.recipients.join(', '), payload.subject, payload.action === 'schedule' ? 'QUEUED' : 'SENT');
+                
+                // Reset files after success
+                if(payload.action === 'sendNow') attachedFiles = [];
+                renderFileList();
+                
             } catch (e) {
-                showToast('Link Error', 'Relay failed. Verify script deployment.');
+                showToast('Link Error', 'Relay failed.');
             } finally {
                 btn.disabled = false;
                 btn.innerText = btnText;
@@ -219,16 +293,20 @@
         }
 
         function fireTransmission() {
+            const emailInput = document.getElementById('recipient-email').value;
+            const recipientArray = emailInput.split(',').map(e => e.trim()).filter(e => e !== "");
+
             const data = {
                 action: 'sendNow',
                 alias: document.getElementById('sender-alias').value,
-                to: document.getElementById('recipient-email').value,
+                recipients: recipientArray,
                 subject: document.getElementById('subject-line').value,
-                body: document.getElementById('message-body').value
+                body: quill.root.innerHTML, // Gets the HTML for paragraphs
+                attachments: attachedFiles
             };
 
-            if(!data.to || !data.subject) {
-                showToast('Validation Failed', 'Recipient and subject required.');
+            if(recipientArray.length === 0 || !data.subject) {
+                showToast('Validation Failed', 'Recipients and subject required.');
                 return;
             }
 
@@ -237,17 +315,21 @@
 
         function scheduleTransmission() {
             const time = document.getElementById('schedule-time').value;
+            const emailInput = document.getElementById('recipient-email').value;
+            const recipientArray = emailInput.split(',').map(e => e.trim()).filter(e => e !== "");
+
             const data = {
                 action: 'schedule',
                 alias: document.getElementById('sender-alias').value,
-                to: document.getElementById('recipient-email').value,
+                recipients: recipientArray,
                 subject: document.getElementById('subject-line').value,
-                body: document.getElementById('message-body').value,
-                scheduledTime: time
+                body: quill.root.innerHTML,
+                scheduledTime: time,
+                attachments: attachedFiles
             };
 
-            if(!data.to || !time) {
-                showToast('Validation Failed', 'Recipient and Time are required for scheduling.');
+            if(recipientArray.length === 0 || !time) {
+                showToast('Validation Failed', 'Recipient and Time required.');
                 return;
             }
 
